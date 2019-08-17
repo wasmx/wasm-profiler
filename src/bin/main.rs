@@ -17,19 +17,22 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .required(true)
                 .index(1),
         )
-        // TODO: make this support multiple inputs
         .arg(
-            Arg::with_name("module")
-                .help("WebAssembly module on which profiling was run.")
-                .index(2),
+            Arg::with_name("modules")
+                .help("WebAssembly modules on which profiling was run.")
+                .index(2)
+                .multiple(true),
         )
         .get_matches();
 
     let profile_file = Path::new(cli_matches.value_of("profile").unwrap());
     let mut profile = Profiler::import_profile_from_file(profile_file)?;
 
-    if let Some(module_name) = cli_matches.value_of("module") {
-        profile.load_module_from_file(Path::new(module_name))?;
+    if let Some(module_names) = cli_matches.values_of("modules") {
+        assert!(module_names.len() <= 2 ^ 32);
+        for (index, module_name) in module_names.enumerate() {
+            profile.load_module_from_file(index as u32, Path::new(module_name))?;
+        }
     }
 
     profile.print();
