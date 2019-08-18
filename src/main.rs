@@ -88,7 +88,7 @@ impl Profiler {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let cli_matches = App::new("wasm-profiler")
         .version(crate_version!())
         .about(crate_description!())
@@ -107,14 +107,13 @@ fn main() {
         .get_matches();
 
     let profile_file = Path::new(cli_matches.value_of("profile").unwrap());
-    let mut profile =
-        Profiler::import_profile_from_file(profile_file).expect("failed to parse/load profile");
+    let mut profile = Profiler::import_profile_from_file(profile_file)?;
 
     if let Some(module_name) = cli_matches.value_of("module") {
-        profile
-            .load_module_from_file(Path::new(module_name))
-            .expect("failed to load wasm");
+        profile.load_module_from_file(Path::new(module_name))?;
     }
 
     profile.print();
+
+    Ok(())
 }
