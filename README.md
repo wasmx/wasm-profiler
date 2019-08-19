@@ -25,14 +25,14 @@ The same function index can be appear multiple times, in which case its duration
 
 As an example:
 ```csv
-func_index,duration
-1,33
-55,1234
-1,22
-1,11
-2,44
-3,55
-4,66
+module_index,func_index,duration
+0,1,33
+0,55,1234
+0,1,22
+0,1,11
+0,2,44
+0,3,55
+0,4,66
 ```
 
 This means that functions 1, 2, 3, 4 and 55 ran for 66us, 44us, 55us, 66us and 1234us, respectively.
