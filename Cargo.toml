@@ -10,5 +10,5 @@ edition = "2018"
 [dependencies]
 clap = "2.33"
 csv = "1.1"
-parity-wasm = "^0.39"
+parity-wasm = "^0.40"
 serde = { version = "1.0", features = ["derive"] } 

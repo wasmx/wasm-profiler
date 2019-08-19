@@ -42,10 +42,9 @@ impl Profiler {
         Ok(ret)
     }
 
-    fn load_module_from_file(&mut self, path: &Path) -> Result<(), Box<Error>> {
+    fn load_module_from_file(&mut self, path: &Path) -> Result<(), parity_wasm::elements::Error> {
         let module = parity_wasm::elements::deserialize_file(&path)?;
-        // FIXME: implement error handling
-        let module = module.parse_names().expect("Failed to parse NamesSection");
+        let module = module.parse_names()?;
 
         if let Some(names_section) = module.names_section() {
             if let Some(function_names) = names_section.functions() {
