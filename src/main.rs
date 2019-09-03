@@ -10,6 +10,14 @@ use std::time::Duration;
 
 type FunctionIndex = u32;
 
+#[derive(Debug)]
+pub struct ProfileEntry {
+    func_index: u32,
+    duration: Duration,
+}
+
+pub type ProfileEntries = Vec<ProfileEntry>;
+
 #[derive(Deserialize, Debug)]
 struct CSVLine {
     func_index: u32,
@@ -23,6 +31,21 @@ struct Profiler {
 }
 
 impl Profiler {
+    fn import_profile(entries: ProfileEntries) -> Profiler {
+        let mut ret = Profiler {
+            profile: HashMap::new(),
+            names: HashMap::new(),
+        };
+
+        for entry in entries {
+            *ret.profile
+                .entry(entry.func_index)
+                .or_insert(Duration::new(0, 0)) += entry.duration;
+        }
+
+        ret
+    }
+
     fn import_profile_from_file(path: &Path) -> Result<Profiler, Box<Error>> {
         let mut reader = csv::Reader::from_path(&path)?;
 
@@ -115,4 +138,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     profile.print();
 
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn import_from_vec() {
+        let entries: ProfileEntries = vec![
+            ProfileEntry {
+                func_index: 0,
+                duration: Duration::from_micros(1234),
+            },
+            ProfileEntry {
+                func_index: 1,
+                duration: Duration::from_micros(555),
+            },
+        ];
+        let profile = Profiler::import_profile(entries);
+        assert_eq!(profile.profile.len(), 2);
+    }
 }
