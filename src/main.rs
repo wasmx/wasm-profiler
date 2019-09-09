@@ -5,6 +5,7 @@ use clap::{App, Arg};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt;
 use std::path::Path;
 use std::time::Duration;
 
@@ -46,7 +47,7 @@ impl Profiler {
         ret
     }
 
-    fn import_profile_from_file(path: &Path) -> Result<Profiler, Box<Error>> {
+    fn import_profile_from_file(path: &Path) -> Result<Profiler, Box<dyn Error>> {
         let mut reader = csv::Reader::from_path(&path)?;
 
         let mut ret = Profiler {
@@ -81,11 +82,17 @@ impl Profiler {
     }
 
     fn print(&self) {
+        println!("{}", self)
+    }
+}
+
+impl fmt::Display for Profiler {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let total_time = self
             .profile
             .iter()
             .fold(Duration::new(0, 0), |acc, e: (_, &Duration)| acc + *e.1);
-        println!("Total time taken {}us", total_time.as_micros());
+        writeln!(f, "Total time taken {}us", total_time.as_micros())?;
 
         // Sort results by value.
         use std::iter::FromIterator;
@@ -99,14 +106,17 @@ impl Profiler {
                 format!("<index:{}>", key)
             };
 
-            println!(
+            writeln!(
+                f,
                 "Function {} took {}us ({:.2}%)",
                 name,
                 val.as_micros(),
                 // TODO: use as_nanos() for better precision?
                 val.as_micros() * 100 / total_time.as_micros()
-            );
+            )?
         }
+
+        Ok(())
     }
 }
 
@@ -158,5 +168,6 @@ mod test {
         ];
         let profile = Profiler::import_profile(entries);
         assert_eq!(profile.profile.len(), 2);
+        assert_eq!(format!("{}", profile), "Total time taken 1789us\nFunction <index:0> took 1234us (68%)\nFunction <index:1> took 555us (31%)\n");
     }
 }
