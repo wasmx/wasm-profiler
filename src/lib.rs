@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate clap;
-
-use clap::{App, Arg};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
@@ -26,13 +22,13 @@ struct CSVLine {
 }
 
 #[derive(Debug)]
-struct Profiler {
+pub struct Profiler {
     profile: HashMap<FunctionIndex, Duration>,
     names: HashMap<FunctionIndex, String>,
 }
 
 impl Profiler {
-    fn import_profile(entries: ProfileEntries) -> Profiler {
+    pub fn import_profile(entries: ProfileEntries) -> Profiler {
         let mut ret = Profiler {
             profile: HashMap::new(),
             names: HashMap::new(),
@@ -47,7 +43,7 @@ impl Profiler {
         ret
     }
 
-    fn import_profile_from_file(path: &Path) -> Result<Profiler, Box<dyn Error>> {
+    pub fn import_profile_from_file(path: &Path) -> Result<Profiler, Box<dyn Error>> {
         let mut reader = csv::Reader::from_path(&path)?;
 
         let mut ret = Profiler {
@@ -66,7 +62,7 @@ impl Profiler {
         Ok(ret)
     }
 
-    fn load_module_from_file(&mut self, path: &Path) -> Result<(), parity_wasm::elements::Error> {
+    pub fn load_module_from_file(&mut self, path: &Path) -> Result<(), parity_wasm::elements::Error> {
         let module = parity_wasm::elements::deserialize_file(&path)?;
         let module = module.parse_names()?;
 
@@ -81,7 +77,7 @@ impl Profiler {
         Ok(())
     }
 
-    fn print(&self) {
+    pub fn print(&self) {
         println!("{}", self)
     }
 }
@@ -118,36 +114,6 @@ impl fmt::Display for Profiler {
 
         Ok(())
     }
-}
-
-fn main() -> Result<(), Box<dyn Error>> {
-    let cli_matches = App::new("wasm-profiler")
-        .version(crate_version!())
-        .about(crate_description!())
-        .arg(
-            Arg::with_name("profile")
-                .help("Profiling result in CSV format.")
-                .required(true)
-                .index(1),
-        )
-        // TODO: make this support multiple inputs
-        .arg(
-            Arg::with_name("module")
-                .help("WebAssembly module on which profiling was run.")
-                .index(2),
-        )
-        .get_matches();
-
-    let profile_file = Path::new(cli_matches.value_of("profile").unwrap());
-    let mut profile = Profiler::import_profile_from_file(profile_file)?;
-
-    if let Some(module_name) = cli_matches.value_of("module") {
-        profile.load_module_from_file(Path::new(module_name))?;
-    }
-
-    profile.print();
-
-    Ok(())
 }
 
 #[cfg(test)]

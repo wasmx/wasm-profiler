@@ -47,6 +47,10 @@ Function strcmp took 55us (3%)
 Function memset took 44us (3%)
 ```
 
+## Library
+
+This create also supplies a library called `wasmprofiler`. It supports loading profiling data programatically or from a CSV file.
+
 ## Maintainers
 
 * Alex Beregszaszi [@axic]

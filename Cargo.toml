@@ -12,3 +12,10 @@ clap = "2.33"
 csv = "1.1"
 parity-wasm = "^0.40"
 serde = { version = "1.0", features = ["derive"] } 
+
+[lib]
+name = "wasmprofiler"
+
+[[bin]]
+name = "wasm-profiler"
+path = "src/bin/main.rs"
