@@ -62,8 +62,10 @@ impl Profiler {
         Ok(ret)
     }
 
-    pub fn load_module_from_file(&mut self, path: &Path) -> Result<(), parity_wasm::elements::Error> {
-        let module = parity_wasm::elements::deserialize_file(&path)?;
+    pub fn load_module(
+        &mut self,
+        module: parity_wasm::elements::Module,
+    ) -> Result<(), parity_wasm::elements::Error> {
         let module = module.parse_names()?;
 
         if let Some(names_section) = module.names_section() {
@@ -75,6 +77,22 @@ impl Profiler {
         }
 
         Ok(())
+    }
+
+    pub fn load_module_from_bytes<T: AsRef<[u8]>>(
+        &mut self,
+        module: T,
+    ) -> Result<(), parity_wasm::elements::Error> {
+        let module = parity_wasm::elements::Module::from_bytes(&module)?;
+        self.load_module(module)
+    }
+
+    pub fn load_module_from_file(
+        &mut self,
+        path: &Path,
+    ) -> Result<(), parity_wasm::elements::Error> {
+        let module = parity_wasm::elements::deserialize_file(&path)?;
+        self.load_module(module)
     }
 
     pub fn print(&self) {
@@ -135,5 +153,17 @@ mod test {
         let profile = Profiler::import_profile(entries);
         assert_eq!(profile.profile.len(), 2);
         assert_eq!(format!("{}", profile), "Total time taken 1789us\nFunction <index:0> took 1234us (68%)\nFunction <index:1> took 555us (31%)\n");
+    }
+
+    #[test]
+    fn import_wasm() {
+        let mut profile = Profiler::import_profile(vec![]);
+        let module = parity_wasm::elements::Module::default();
+        let module = module.to_bytes().expect("wasm serialization to work");
+        profile
+            .load_module_from_bytes(&module)
+            .expect("wasm loading to work");
+        assert_eq!(profile.profile.len(), 0);
+        assert_eq!(format!("{}", profile), "Total time taken 0us\n");
     }
 }
